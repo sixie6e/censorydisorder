@@ -20,7 +20,7 @@ def download_audio(url: str, output_path: str) -> str:
             base, ext = os.path.splitext(downloaded_file)
             new_file = base + ".wav"
             os.rename(downloaded_file, new_file)
-            print(f"renamed to {new_file}")  # when renaming extention fails, try ffmpeg/pydub
+            print(f"renamed to {new_file}")  # when renaming extension fails, try ffmpeg/pydub
             return new_file
 
         return downloaded_file
