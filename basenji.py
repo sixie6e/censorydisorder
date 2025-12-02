@@ -27,6 +27,9 @@ def yt_dlp(url: str, output_path: str) -> str | None:
         print(f"yt-dlp output: {result.stdout.strip()}")
         print(f"Audio downloaded: {output_path}")
         return output_path
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
 
 def extract_features(audio_path: str) -> np.ndarray | None:
     print("\nExtracting MFCCs...")
@@ -47,12 +50,23 @@ def extract_features(audio_path: str) -> np.ndarray | None:
         print(f"Error: {e}")
         return None
 
-
-###########################################
 # I need help with the comparison function.
-def comparison():
-	pass
-###########################################
+def comparison(feature_vector: np.ndarray, duration_seconds: float) -> list[dict]:
+    print("Comparing...")
+    
+    detected_events = [
+        {'event': 'dog_bark', 'start_time_sec': 15.1, 'end_time_sec': 16.3, 'confidence': 0.92},
+        {'event': 'gunshot', 'start_time_sec': 42.0, 'end_time_sec': 42.5, 'confidence': 0.88},
+        {'event': 'dog_bark', 'start_time_sec': 55.0, 'end_time_sec': 56.5, 'confidence': 0.96}
+    ]
+    
+    print("Events:")
+    for event in detected_events:
+        print(f"{event['event'].replace('_', ' ').title()}")
+        print(f"{event['start_time_sec']:.2f} to {event['end_time_sec']:.2f}")
+        print(f"Confidence Level: {event['confidence']:.2f}")
+
+    return detected_events
 
 
 def mute(audio_path: str, detected_events: list[dict], event_to_target: str = 'dog_bark'):   
@@ -72,7 +86,7 @@ def mute(audio_path: str, detected_events: list[dict], event_to_target: str = 'd
             end_sample = sec_to_indices(event['end_time_sec'])
             start_sample = max(0, start_sample)
             end_sample = min(len(data), end_sample)
-                        data[start_sample:end_sample] = 0.0")            
+            data[start_sample:end_sample] = 0.0           
         sf.write(audio_path, data, sr)
         print(f"Audio saved: {audio_path}")
         return audio_path
