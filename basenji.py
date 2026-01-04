@@ -7,7 +7,7 @@ from typing import List, Dict, Union, Optional
 
 url = input("video URL: ")
 temp_vid = "temp_vid.mp4"
-temp_audio = "temp_audio.m4a"
+temp_audio = "temp_audio.mp3"
 video_out = "video_out.mp4"
 sample_rate = 22050  # standard
 
@@ -17,7 +17,7 @@ def yt_dlp(url: str, output_path: str) -> Optional[str]:
     command = [
         "yt-dlp",
         "-x",
-        "--audio-format", "m4a",
+        "--audio-format", "mp3",
         "-o", output_path,
         url
     ]
@@ -52,12 +52,10 @@ def extract_features(audio_path: str) -> Optional[np.ndarray]:
 
 def comparison(feature_vector: np.ndarray, duration_seconds: float) -> List[Dict]:
     print("Comparing...")
-    
+   
     # Placeholder for logic to compare feature_vector against a model
     detected_events = [
-        {'event': 'dog_bark', 'start_time_sec': 15.1, 'end_time_sec': 16.3, 'confidence': 0.92},
-        {'event': 'gunshot', 'start_time_sec': 42.0, 'end_time_sec': 42.5, 'confidence': 0.88},
-        {'event': 'dog_bark', 'start_time_sec': 55.0, 'end_time_sec': 56.5, 'confidence': 0.96}
+        {'event': 'dog_bark', 'start_time_sec': 0.2, 'end_time_sec': 1.3, 'confidence': 0.92},
     ]
     
     print("Events:")
@@ -85,8 +83,7 @@ def mute(audio_path: str, detected_events: List[Dict], event_to_target: str = 'd
             end_sample = sec_to_indices(event['end_time_sec'])
             start_sample = max(0, start_sample)
             end_sample = min(len(data), end_sample)
-            data[start_sample:end_sample] = 0.0          
-        
+            data[start_sample:end_sample] = 0.0           
         sf.write(audio_path, data, sr)
         print(f"Audio saved: {audio_path}")
         return audio_path
@@ -146,15 +143,14 @@ def recombine(url: str):
     
     detected_events = comparison(features if features is not None else np.array([]), audio_duration)
     modified_audio_file = mute(audio_file, detected_events, event_to_target='dog_bark')
-    
+
     if not modified_audio_file:
         if os.path.exists(temp_audio):
              os.remove(temp_audio)
         return
         
     final_video = replace(url, modified_audio_file, video_out, temp_vid)
-    
-    # Cleanup
+
     for f in [temp_audio, temp_vid]:
         if os.path.exists(f):
             try:
