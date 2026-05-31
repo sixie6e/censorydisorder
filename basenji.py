@@ -4,6 +4,7 @@ import numpy as np
 import librosa
 import soundfile as sf
 from typing import List, Dict, Union, Optional
+from audio_separator.separator import Separator
 
 url = input("video URL: ")
 temp_vid = "temp_vid.mp4"
@@ -11,22 +12,31 @@ temp_audio = "temp_audio.mp3"
 video_out = "video_out.mp4"
 sample_rate = 22050  # standard
 
-def yt_dlp(url: str, output_path: str) -> Optional[str]:
+def remove_vocals(audio):
+    separator = Separator()
+    separator.load_model('model_name=UVR-MDX-NET-Inst_HQ_3.onnx')
+    print(f"Processing '{audio}'")
+    o = separator.separate(audio)
+    for file in o:
+        print(f" - {file}")
+    return audio 
+
+def yt_dlp(url: str, audio: str) -> Optional[str]:
     print("Getting audio...")
     
     command = [
         "yt-dlp",
         "-x",
         "--audio-format", "mp3",
-        "-o", output_path,
+        "-o", audio,
         url
     ]
     
     try:
         result = subprocess.run(command, check=True, capture_output=True, text=True)
         print(f"yt-dlp output: {result.stdout.strip()}")
-        print(f"Audio downloaded: {output_path}")
-        return output_path
+        print(f"Audio downloaded: {audio}")
+        return audio       
     except Exception as e:
         print(f"Error: {e}")
         return None
@@ -137,7 +147,7 @@ def recombine(url: str):
     if not audio_file:
         return
 
-    audio_duration = librosa.get_duration(filename=audio_file)
+    audio_duration = librosa.get_duration(path=audio_file)
     print(f"Audio duration: {audio_duration:.2f} seconds")
     features = extract_features(audio_file)
     
@@ -149,15 +159,4 @@ def recombine(url: str):
              os.remove(temp_audio)
         return
         
-    final_video = replace(url, modified_audio_file, video_out, temp_vid)
-
-    for f in [temp_audio, temp_vid]:
-        if os.path.exists(f):
-            try:
-                os.remove(f)
-                print(f"Removed: {f}")
-            except OSError as e:
-                print(f"Error deleting {f}: {e}")
-
-if __name__ == "__main__":
-    recombine(url)
+    final_video = replace(url, modified_audio_file, video_out, temp_
